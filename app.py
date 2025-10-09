@@ -62,6 +62,7 @@ st.markdown("---")
 # --- 5. User Input Sidebar ---
 st.sidebar.header("Masukkan Data Pemohon Pinjaman")
 def get_user_input():
+    """Collects user input from the sidebar and returns it as a DataFrame."""
     pendapatan = st.sidebar.number_input('Pendapatan Bulanan (Rp)', min_value=1000000, max_value=100000000, value=8000000, step=500000)
     rasio_utang = st.sidebar.slider('Rasio Utang terhadap Pendapatan (%)', min_value=0, max_value=100, value=35)
     skor_slik = st.sidebar.selectbox('Skor SLIK OJK', ['1 - Lancar', '2 - DPK', '3 - Kurang Lancar', '4 - Diragukan', '5 - Macet'])
@@ -69,7 +70,7 @@ def get_user_input():
     st.sidebar.markdown("---")
     st.sidebar.markdown("**Atribut Demografis**")
     jenis_kelamin = st.sidebar.selectbox('Jenis Kelamin', ['Laki-laki', 'Perempuan'])
-    suku = st.sidebar.selectbox('Suku', ['Jawa', 'Sunda', 'Batak', 'Tionghoa', 'Lainnya'])
+    suku = st.sidebar.selectbox('Suku', ['Jawa', 'Sunda', 'Batak', 'Bugis', 'Lainnya'])
     jenis_pekerjaan = st.sidebar.selectbox('Jenis Pekerjaan', ['Karyawan Swasta', 'PNS', 'Wiraswasta', 'Pengemudi Online', 'Tidak Bekerja'])
     kode_pos = st.sidebar.selectbox('Kode Pos', ['12190', '50132', '60241', '10110', '14450'], help="Kode pos '14450' berkorelasi dengan suku tertentu.")
     
@@ -125,54 +126,3 @@ if 'explainer' in locals() and explainer is not None:
 
 else:
     st.warning("Model atau data tidak dapat dimuat. Aplikasi tidak dapat berjalan.")
-    
-# # --- 6. Prediction and Explanation ---
-# if 'explainer' in locals() and explainer is not None:
-#     prediction_encoded = model_pipeline.predict(input_df)[0]
-#     prediction_decoded = label_encoder.inverse_transform([prediction_encoded])[0]
-#     prediction_proba = model_pipeline.predict_proba(input_df)[0]
-#     prob_of_approval = prediction_proba[list(label_encoder.classes_).index('Disetujui')]
-
-#     st.subheader("Hasil Prediksi Model")
-#     col1, col2 = st.columns(2)
-#     with col1:
-#         st.metric(label="Keputusan", value=prediction_decoded.upper(), delta="✅" if prediction_decoded == 'Disetujui' else "❌", delta_color="normal" if prediction_decoded == 'Disetujui' else "inverse")
-#     with col2:
-#         st.metric(label="Probabilitas Persetujuan", value=f"{prob_of_approval:.2%}")
-
-#     st.markdown("---")
-#     st.subheader("Analisis Faktor Keputusan (Model Explainability)")
-#     st.info("**Cara Membaca Grafik:** Faktor biru mendorong ke arah persetujuan, faktor merah mendorong ke arah penolakan.", icon="💡")
-    
-#     # KernelExplainer works with raw data
-#     # shap_values = explainer.shap_values(input_df)
-#     shap_values = explainer.shap_values(input_df, l1_reg=0)
-    
-#     # Get the index for the 'Disetujui' class
-#     approval_class_index = list(label_encoder.classes_).index('Disetujui')
-
-#     # Create an explanation object for the 'Disetujui' class
-#     shap_explanation = shap.Explanation(
-#         values=shap_values[approval_class_index][0], 
-#         base_values=explainer.expected_value[approval_class_index], 
-#         # data=input_df.iloc[0],
-#         data=input_df.iloc[0].values,
-#         feature_names=X_background.columns.tolist()
-#     )
-    
-#     # Display the SHAP waterfall plot using st.pyplot
-#     fig, ax = plt.subplots()
-#     # shap.plots.waterfall(shap_explanation, show=False)
-#     shap.plots.waterfall(
-#      shap_explanation,
-#      max_display=10,
-#      show=False
-#  )
-#     st.pyplot(fig, bbox_inches='tight')
-#     plt.close(fig) # Close the figure to avoid displaying it twice
-
-#     st.markdown("---")
-#     st.warning("**TUGAS UNTUK ANDA:** Coba ubah 'Suku', 'Jenis Kelamin', atau 'Kode Pos' dan perhatikan bagaimana grafik penjelasan berubah untuk menemukan bias.", icon="🔬")
-
-# else:
-#     st.warning("Model atau data tidak dapat dimuat. Aplikasi tidak dapat berjalan.")
