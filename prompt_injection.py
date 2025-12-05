@@ -1,7 +1,7 @@
 import streamlit as st
 import os
 from langchain_openai import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
+from langchain_core.prompts import ChatPromptTemplate
 
 # --- Konfigurasi ---
 # System prompt asli tetap sama. Ini adalah instruksi inti untuk AI.
