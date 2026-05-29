@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pandas as pd
+from pandas.api.types import is_numeric_dtype
 
 from utils.model_utils import FEATURE_COLUMNS, score_dataframe
 
@@ -23,12 +24,22 @@ def global_feature_importance(model_pipeline) -> pd.DataFrame:
     return pd.DataFrame({"feature": list(importances.keys()), "importance": list(importances.values())}).sort_values("importance", ascending=False)
 
 
+def reference_value(series: pd.Series):
+    cleaned = series.dropna()
+    if cleaned.empty:
+        return 0
+    if is_numeric_dtype(cleaned):
+        return cleaned.astype(float).median()
+    mode = cleaned.mode(dropna=True)
+    return mode.iloc[0] if not mode.empty else cleaned.iloc[0]
+
+
 def local_perturbation_explanation(model_pipeline, row: pd.DataFrame, reference_df: pd.DataFrame) -> pd.DataFrame:
     base_score = float(score_dataframe(model_pipeline, row).iloc[0])
     rows = []
     for feature in FEATURE_COLUMNS:
         perturbed = row.copy()
-        replacement = reference_df[feature].mode(dropna=True).iloc[0] if reference_df[feature].dtype == "object" else reference_df[feature].median()
+        replacement = reference_value(reference_df[feature])
         perturbed.loc[perturbed.index[0], feature] = replacement
         new_score = float(score_dataframe(model_pipeline, perturbed).iloc[0])
         rows.append({"feature": feature, "current_value": row.iloc[0][feature], "reference_value": replacement, "score_change_if_replaced": round(new_score - base_score, 2)})
@@ -41,7 +52,7 @@ def shap_like_contributions(model_pipeline, row: pd.DataFrame, reference_df: pd.
     rows = []
     for feature in FEATURE_COLUMNS:
         perturbed = row.copy()
-        replacement = reference_df[feature].mode(dropna=True).iloc[0] if reference_df[feature].dtype == "object" else reference_df[feature].median()
+        replacement = reference_value(reference_df[feature])
         perturbed.loc[perturbed.index[0], feature] = replacement
         reference_score = float(score_dataframe(model_pipeline, perturbed).iloc[0])
         rows.append(

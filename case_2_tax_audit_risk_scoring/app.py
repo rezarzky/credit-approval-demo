@@ -72,7 +72,7 @@ if page == "Overview":
     c3.metric("High risk rate", f"{(df_scored['risk_score'] >= threshold).mean():.1%}")
     c4.metric("ROC-AUC data uji saat training", f"{artifact['metrics']['roc_auc']:.3f}")
     st.write("Dataset sepenuhnya sintetis. Aplikasi menyediakan prediction, performance, threshold, fairness, explainability, dan data audit.")
-    st.dataframe(df_scored.head(25), use_container_width=True, hide_index=True)
+    st.dataframe(df_scored.head(25), width="stretch", hide_index=True)
 
 elif page == "Prediksi":
     st.subheader("Prediksi Single Input")
@@ -102,7 +102,7 @@ elif page == "Prediksi":
     score = float(score_dataframe(pipeline, input_df).iloc[0])
     st.metric("Tax Audit Risk Score", f"{score:.1f}%", help="Probability score dari model, bukan keputusan otomatis.")
     st.write(f"Kategori visual: **{risk_band(score, low_threshold, threshold)}**")
-    st.dataframe(input_df, use_container_width=True, hide_index=True)
+    st.dataframe(input_df, width="stretch", hide_index=True)
 
 elif page == "Performance & Threshold":
     st.subheader("Performance & Threshold")
@@ -115,9 +115,9 @@ elif page == "Performance & Threshold":
     c2.metric("Precision", f"{metrics['precision']:.3f}")
     c3.metric("Recall", f"{metrics['recall']:.3f}")
     c4.metric("F1-score", f"{metrics['f1']:.3f}")
-    st.dataframe(confusion_matrix_simple(y_true, y_pred), use_container_width=True)
+    st.dataframe(confusion_matrix_simple(y_true, y_pred), width="stretch")
     st.write("Reliability check sederhana.")
-    st.dataframe(calibration_table(y_true, y_prob), use_container_width=True, hide_index=True)
+    st.dataframe(calibration_table(y_true, y_prob), width="stretch", hide_index=True)
 
     st.write("Analisis threshold ringkas.")
     rows = []
@@ -126,21 +126,21 @@ elif page == "Performance & Threshold":
         metrics = binary_metrics(y_true.to_numpy(), (df_scored["risk_score"] / 100).to_numpy(), t / 100)
         rows.append({"threshold_percent": t, "selected_rate": round(y_pred.mean(), 3), "precision": round(metrics["precision"], 3), "recall": round(metrics["recall"], 3), "f1_score": round(metrics["f1"], 3)})
     threshold_df = pd.DataFrame(rows)
-    st.dataframe(threshold_df, use_container_width=True, hide_index=True)
+    st.dataframe(threshold_df, width="stretch", hide_index=True)
     st.line_chart(threshold_df.set_index("threshold_percent")[["precision", "recall", "f1_score"]])
 
 elif page == "Fairness":
     st.subheader("Fairness Audit")
     group_col = st.selectbox("Analisis berdasarkan atribut", ["sector", "business_size", "kpp_region", "demographic_group", "taxpayer_type", "pkp_status"])
     summary = group_score_summary(df_scored, group_col, "risk_score", threshold, label_col="audit_risk_label")
-    st.dataframe(summary, use_container_width=True, hide_index=True)
+    st.dataframe(summary, width="stretch", hide_index=True)
     st.bar_chart(summary.set_index("group")[["average_score", "high_risk_rate_by_threshold"]])
 
 elif page == "SHAP Explainability":
     st.subheader("SHAP Explainability")
     importance = global_feature_importance(pipeline)
     st.write("Global feature importance sederhana.")
-    st.dataframe(importance, use_container_width=True, hide_index=True)
+    st.dataframe(importance, width="stretch", hide_index=True)
     st.bar_chart(importance.set_index("feature")["importance"])
     taxpayer_id = st.selectbox("Pilih taxpayer_id", df_scored["taxpayer_id"].head(250))
     selected_row = df_scored.loc[df_scored["taxpayer_id"] == taxpayer_id, FEATURE_COLUMNS]
@@ -149,16 +149,16 @@ elif page == "SHAP Explainability":
     shap_df = shap_like_contributions(pipeline, selected_row, df_scored[FEATURE_COLUMNS]).head(12)
     st.write("Visualisasi SHAP-style: nilai positif menaikkan risk score, nilai negatif menurunkan risk score.")
     st.bar_chart(shap_df.set_index("feature")["shap_value"])
-    st.dataframe(shap_df, use_container_width=True, hide_index=True)
+    st.dataframe(shap_df, width="stretch", hide_index=True)
     with st.expander("Detail local perturbation"):
-        st.dataframe(local_perturbation_explanation(pipeline, selected_row, df_scored[FEATURE_COLUMNS]), use_container_width=True, hide_index=True)
+        st.dataframe(local_perturbation_explanation(pipeline, selected_row, df_scored[FEATURE_COLUMNS]), width="stretch", hide_index=True)
 
 elif page == "Data Audit":
     st.subheader("Data Audit")
     missing = df.isna().sum().reset_index()
     missing.columns = ["column", "missing_count"]
     missing["missing_rate"] = (missing["missing_count"] / len(df)).round(3)
-    st.dataframe(missing, use_container_width=True, hide_index=True)
+    st.dataframe(missing, width="stretch", hide_index=True)
     c1, c2 = st.columns(2)
     with c1:
         st.write("Distribusi label dummy")
@@ -167,4 +167,4 @@ elif page == "Data Audit":
         st.write("Kategori sektor")
         st.dataframe(df["sector"].value_counts(dropna=False).reset_index(), hide_index=True)
     st.write("Statistik numerik")
-    st.dataframe(df.select_dtypes(include="number").describe().T, use_container_width=True)
+    st.dataframe(df.select_dtypes(include="number").describe().T, width="stretch")
