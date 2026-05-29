@@ -5,7 +5,7 @@ from pathlib import Path
 
 import streamlit as st
 
-from utils.guardrails import classify_output, detect_risk_flags, weak_output_filter
+from utils.guardrails import classify_output, detect_risk_flags, detect_successful_prompt_injection, weak_output_filter
 from utils.logging_utils import build_log_entry, logs_to_dataframe
 from utils.mock_llm import generate_mock_response
 from utils.openai_client import call_openai_chat, resolve_api_key
@@ -126,8 +126,17 @@ with tab_chat:
                     response = "Mode API gagal dipanggil, aplikasi beralih ke mock response.\n\n" + f"Detail error: {exc}\n\n" + generate_mock_response(user_query, SYSTEM_PROMPT, retrieved_context)
                 response = weak_output_filter(response)
                 output_classification = classify_output(response)
+                success_flags = detect_successful_prompt_injection(response)
                 st.markdown(response)
                 st.caption(f"Output classification: {output_classification} | Risk flag: {', '.join(risk_flags) or '-'}")
+                if success_flags:
+                    st.balloons()
+                    st.error(
+                        "Prompt injection berhasil terindikasi. Respons memuat informasi yang seharusnya tidak dibuka langsung oleh chatbot.",
+                        icon="🚨",
+                    )
+                    with st.expander("Detail indikator untuk fasilitator/auditor"):
+                        st.write(", ".join(success_flags))
 
         st.session_state.messages.append({"role": "assistant", "content": response})
         st.session_state.audit_logs.append(build_log_entry(user_role, model_name, effective_mode, user_query, retrieved_context, response, risk_flags, output_classification))

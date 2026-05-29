@@ -119,6 +119,39 @@ if 'explainer' in locals() and explainer is not None:
     st.pyplot(fig, bbox_inches='tight')
     plt.close(fig) # Close the figure to avoid displaying it twice
 
+    approved_explanation = shap_explanation[0, :, approval_class_index]
+    feature_importance_df = pd.DataFrame({
+        "Fitur": input_df.columns,
+        "Nilai Input": input_df.iloc[0].astype(str).values,
+        "Kontribusi SHAP": approved_explanation.values,
+    })
+    feature_importance_df["Importance Absolut"] = feature_importance_df["Kontribusi SHAP"].abs()
+    feature_importance_df["Dampak ke Persetujuan"] = feature_importance_df["Kontribusi SHAP"].apply(
+        lambda value: "Menaikkan peluang" if value >= 0 else "Menurunkan peluang"
+    )
+    feature_importance_df = feature_importance_df.sort_values(
+        "Importance Absolut",
+        ascending=False
+    ).reset_index(drop=True)
+    feature_importance_df.insert(0, "Peringkat", feature_importance_df.index + 1)
+
+    st.markdown("**Tabel Feature Importance Lokal**")
+    st.caption(
+        "Diurutkan berdasarkan pengaruh absolut terhadap prediksi kelas 'Disetujui'. "
+        "Nilai SHAP positif menaikkan peluang persetujuan, sedangkan nilai negatif menurunkannya."
+    )
+    st.dataframe(
+        feature_importance_df[[
+            "Peringkat",
+            "Fitur",
+            "Nilai Input",
+            "Kontribusi SHAP",
+            "Dampak ke Persetujuan",
+        ]].style.format({"Kontribusi SHAP": "{:+.4f}"}),
+        use_container_width=True,
+        hide_index=True
+    )
+
     # --- END: Updated SHAP Plotting Logic ---
 
     st.markdown("---")
