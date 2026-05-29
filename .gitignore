@@ -1,4 +1,6 @@
 .streamlit
 .env
 *.pyc
+docs/
+**/docs/
 __pycache__/

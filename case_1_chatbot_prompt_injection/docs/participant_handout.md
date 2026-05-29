@@ -2,11 +2,13 @@
 
 ## Narasi Kasus
 
-Inspektorat AI dan Analitika Audit, organisasi fiktif untuk pelatihan, sedang menguji chatbot internal untuk membantu auditor mencari informasi audit masa lalu. Chatbot diposisikan sebagai kanal pencarian awal, bukan pengganti kertas kerja audit, evidence resmi, atau keputusan pengendali teknis.
+Inspektorat AI dan Analitika Audit sedang menguji chatbot internal untuk membantu auditor mencari informasi audit masa lalu. Chatbot diposisikan sebagai kanal pencarian awal, bukan pengganti kertas kerja audit, evidence resmi, atau keputusan pengendali teknis.
 
-## Deskripsi Unit Fiktif
+## Deskripsi Unit
 
 Unit ini bertanggung jawab atas pengelolaan knowledge management audit, analitik temuan, dan dukungan perencanaan audit berbasis risiko. Unit ingin memakai AI generatif untuk mempercepat pencarian ringkasan temuan masa lalu dengan tetap memperhatikan tata kelola SPBE, klasifikasi informasi audit, dan human review.
+
+Sistem masih berada pada tahap inisiasi/pilot internal. Berdasarkan paparan awal pemilik sistem, pengembangan dan operasionalisasi masih banyak bergantung pada satu PIC teknis, deployment dilakukan manual, dan monitoring masih berbasis review log sederhana.
 
 ## Tujuan Chatbot
 
@@ -17,11 +19,14 @@ Unit ini bertanggung jawab atas pengelolaan knowledge management audit, analitik
 
 ## Ruang Lingkup Audit
 
-Fungsi chatbot, konfigurasi model, knowledge base, context retrieval, klasifikasi informasi audit, kontrol akses berbasis role, logging, audit evidence, dan kebutuhan human review.
+Ruang lingkup audit mencakup aspek teknis dan lifecycle/operasional:
+
+- Aspek teknis: fungsi chatbot, konfigurasi model, knowledge base, context retrieval, klasifikasi informasi audit, kontrol akses berbasis role, logging, audit evidence, dan kebutuhan human review.
+- Aspek lifecycle/operasional: pengembangan, dokumentasi kebutuhan/desain, repository dan versioning, deployment, secret management, monitoring, incident response, SDM/PIC, dan change management.
 
 ## Aset/Data yang Tersedia
 
-Aplikasi `app.py`, folder `data/`, folder `utils/`, panel log aplikasi, dan export log CSV. Semua data bersifat dummy.
+Aplikasi `app.py`, folder `data/`, folder `utils/`, panel log aplikasi, export log CSV, dan dokumen `docs/lifecycle_narrative.md`. Artefak data pada studi kasus ini disiapkan untuk asesmen kelas dan tidak boleh diperlakukan sebagai data riil Kementerian Keuangan.
 
 ## Cara Menjalankan
 
@@ -54,7 +59,7 @@ export OPENAI_API_KEY="isi_api_key"
 ## Menu Aplikasi
 
 - `Chatbot`: percakapan utama.
-- `Repositori Ringkasan`: dokumen dummy.
+- `Repositori Ringkasan`: ringkasan dokumen audit yang disiapkan untuk asesmen.
 - `Panel Admin/Audit`: log prompt, context, respons, timestamp, role, dan risk flag sederhana.
 - Sidebar: role, mode LLM, model, temperature, retrieval, clear chat, clear log.
 
@@ -62,9 +67,11 @@ export OPENAI_API_KEY="isi_api_key"
 
 1. Pahami tujuan aplikasi dan alur pemrosesan pertanyaan.
 2. Jalankan pertanyaan normal untuk baseline.
-3. Uji variasi role, klasifikasi data, dan pertanyaan berisiko.
-4. Kumpulkan evidence dari UI, log, CSV, dan kode.
-5. Susun temuan audit berisi kondisi, kriteria, sebab, dampak, evidence, dan rekomendasi awal.
+3. Review narasi pengembangan, deployment, dan monitoring.
+4. Uji variasi role, klasifikasi data, dan pertanyaan berisiko.
+5. Kumpulkan evidence dari UI, log, CSV, kode, dan dokumen lifecycle.
+6. Pisahkan temuan menjadi temuan teknis dan temuan lifecycle/operasional.
+7. Susun temuan audit berisi kondisi, kriteria, sebab, dampak, evidence, dan rekomendasi awal.
 
 ## Pertanyaan Audit Terbuka
 
@@ -74,10 +81,12 @@ export OPENAI_API_KEY="isi_api_key"
 - Apakah log cukup untuk monitoring dan audit evidence?
 - Apakah respons berisiko memiliki mekanisme review manusia?
 - Apakah konfigurasi model dan parameter operasional terdokumentasi?
+- Apakah proses pengembangan, deployment, monitoring, dan incident response sudah memadai untuk chatbot audit?
+- Apakah ketergantungan pada PIC, deployment manual, repository/versioning, dan audit trail perubahan sudah memadai?
 
 ## Evidence dan Format Laporan
 
-Kumpulkan screenshot konfigurasi, respons baseline, log CSV, catatan review kode, dan ringkasan test scenario. Laporan berisi ringkasan eksekutif, metodologi, test scenario, temuan, prioritas perbaikan, dan lampiran evidence.
+Kumpulkan screenshot konfigurasi, respons baseline, log CSV, catatan review kode, review `lifecycle_narrative.md`, dan ringkasan test scenario. Laporan berisi ringkasan eksekutif, metodologi, test scenario, temuan teknis, temuan lifecycle/operasional, prioritas perbaikan, dan lampiran evidence.
 
 ## Batasan
 

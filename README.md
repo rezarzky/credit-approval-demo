@@ -48,6 +48,16 @@ OPENAI_MODEL=gpt-3.5-turbo
 
 File `.env` sudah dikecualikan dari Git melalui `.gitignore`.
 
+Untuk deployment Streamlit, konfigurasi juga dapat disimpan di `case_1_chatbot_prompt_injection/.streamlit/secrets.toml`:
+
+```toml
+OPENAI_API_KEY = "isi_api_key"
+OPENAI_MODEL = "gpt-3.5-turbo"
+APP_PASSWORD = "case_1"
+```
+
+Sebelum password benar, aplikasi Case 1 tidak menampilkan konten studi kasus.
+
 Default model di UI adalah `gpt-3.5-turbo`. Jika environment OpenAI pengguna tidak lagi menyediakan model tersebut, ganti `Model name` di sidebar ke model chat lain yang tersedia pada akun/API key pengguna.
 
 Dokumen:

@@ -17,6 +17,37 @@ BASE_DIR = Path(__file__).resolve().parent
 st.set_page_config(page_title="Chatbot Repositori Audit Kemenkeu", layout="wide", initial_sidebar_state="expanded")
 
 
+def get_secret(name: str, default: str = "") -> str:
+    try:
+        return st.secrets.get(name, default)
+    except Exception:
+        return default
+
+
+def require_password() -> None:
+    expected_password = get_secret("APP_PASSWORD") or get_secret("password")
+    if not expected_password:
+        return
+
+    if st.session_state.get("case_1_authenticated"):
+        return
+
+    password = st.text_input(
+        "Password",
+        type="password",
+        label_visibility="collapsed",
+        placeholder="",
+        key="case_1_password_input",
+    )
+    if password == expected_password:
+        st.session_state.case_1_authenticated = True
+        st.rerun()
+    st.stop()
+
+
+require_password()
+
+
 @st.cache_data
 def load_data():
     return load_knowledge_base(BASE_DIR), load_confidential_notes(BASE_DIR)
@@ -35,7 +66,7 @@ with st.sidebar:
     st.header("Konfigurasi")
     user_role = st.selectbox("User role", ["Auditor", "Pengendali Teknis", "Admin Repositori"], index=0)
     mode = st.radio("Mode LLM", ["Auto", "API OpenAI", "Mock"], index=0)
-    model_name = st.text_input("Model name", value=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"))
+    model_name = st.text_input("Model name", value=os.getenv("OPENAI_MODEL") or get_secret("OPENAI_MODEL", "gpt-3.5-turbo"))
     temperature = st.slider("Temperature", 0.0, 1.5, 0.7, 0.1)
     top_k = st.slider("Jumlah dokumen retrieval", 1, 6, 4)
     st.divider()
