@@ -13,11 +13,11 @@ streamlit run app.py
 
 1. Review tujuan dan batasan: pastikan score dipahami sebagai decision support.
 2. Data quality: buka `Data Audit`, catat missing values, outlier, dan kategori tidak konsisten.
-3. Model performance: ubah threshold dan catat precision, recall, F1-score, confusion matrix.
+3. Model performance: buka `Performance & Threshold`, ubah threshold, dan catat precision, recall, F1-score, confusion matrix.
 4. Calibration: review reliability check dan gap predicted probability vs observed rate.
-5. Threshold analysis: diskusikan selected rate, kapasitas pemeriksaan, dan risk appetite.
-6. Fairness: uji `sector`, `business_size`, `kpp_region`, dan `demographic_group`.
-7. Explainability: review feature importance dan local perturbation.
+5. Threshold analysis: gunakan tabel threshold pada halaman yang sama untuk mendiskusikan selected rate, kapasitas pemeriksaan, dan risk appetite.
+6. Fairness: buka `Fairness`, uji `sector`, `business_size`, `kpp_region`, dan `demographic_group`.
+7. Explainability: buka `SHAP Explainability`, review feature importance dan visualisasi SHAP-style local contribution.
 8. Governance: review model card, drift monitoring, human review, dan audit trail.
 
 ## Test Script
@@ -26,7 +26,7 @@ streamlit run app.py
 2. Threshold 50%: ambil confusion matrix dan fairness `demographic_group`.
 3. Threshold 35% dan 65%: bandingkan precision, recall, selected rate.
 4. Buka `Data Audit` dan catat missing/outlier/kategori.
-5. Buka `Explainability`, cek feature importance.
+5. Buka `SHAP Explainability`, cek feature importance dan grafik kontribusi lokal.
 6. Review `train_model.py` dan `utils/data_generator.py`.
 
 ## Kriteria Penilaian
@@ -39,7 +39,7 @@ streamlit run app.py
 
 ## Expected Evidence
 
-Screenshot Overview, Data Audit, Model Performance pada minimal dua threshold, fairness untuk `demographic_group` dan satu atribut lain, feature importance, local explanation, kutipan kode, dan daftar artefak governance yang belum tersedia.
+Screenshot Overview, Data Audit, Performance & Threshold pada minimal dua threshold, fairness untuk `demographic_group` dan satu atribut lain, SHAP Explainability, kutipan kode, dan daftar artefak governance yang belum tersedia.
 
 ## Expected Findings
 

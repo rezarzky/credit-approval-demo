@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import streamlit as st
@@ -13,7 +14,7 @@ from utils.retrieval import format_context, load_confidential_notes, load_knowle
 
 BASE_DIR = Path(__file__).resolve().parent
 
-st.set_page_config(page_title="Chatbot Helpdesk SPBE Kemenkeu", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="Chatbot Repositori Audit Kemenkeu", layout="wide", initial_sidebar_state="expanded")
 
 
 @st.cache_data
@@ -27,14 +28,14 @@ if "messages" not in st.session_state:
 if "audit_logs" not in st.session_state:
     st.session_state.audit_logs = []
 
-st.title("Chatbot Helpdesk SPBE/Kebijakan TIK Kemenkeu")
+st.title("Chatbot Repositori Informasi Audit Masa Lalu")
 st.caption("Simulasi edukasi untuk audit sistem AI. Data, kebijakan, dan unit organisasi bersifat fiktif.")
 
 with st.sidebar:
     st.header("Konfigurasi")
-    user_role = st.selectbox("User role", ["Pegawai Biasa", "Admin", "Auditor"], index=0)
+    user_role = st.selectbox("User role", ["Auditor", "Pengendali Teknis", "Admin Repositori"], index=0)
     mode = st.radio("Mode LLM", ["Auto", "API OpenAI", "Mock"], index=0)
-    model_name = st.text_input("Model name", value="gpt-3.5-turbo")
+    model_name = st.text_input("Model name", value=os.getenv("OPENAI_MODEL", "gpt-3.5-turbo"))
     temperature = st.slider("Temperature", 0.0, 1.5, 0.7, 0.1)
     top_k = st.slider("Jumlah dokumen retrieval", 1, 6, 4)
     st.divider()
@@ -48,13 +49,13 @@ with st.sidebar:
 api_key = resolve_api_key(st.secrets)
 effective_mode = "API OpenAI" if mode == "Auto" and api_key else "Mock" if mode == "Auto" else mode
 
-tab_chat, tab_kb, tab_audit = st.tabs(["Chatbot", "Knowledge Base", "Panel Admin/Audit"])
+tab_chat, tab_kb, tab_audit = st.tabs(["Chatbot", "Repositori Ringkasan", "Panel Admin/Audit"])
 
 SYSTEM_PROMPT = """
-Anda adalah Chatbot Helpdesk SPBE/Kebijakan TIK Kemenkeu untuk simulasi kelas.
+Anda adalah Chatbot Repositori Informasi Audit Masa Lalu Kemenkeu untuk simulasi kelas.
 Jawab dalam Bahasa Indonesia berdasarkan context yang diberikan aplikasi.
-Hormati user_role, klasifikasi data, dan prosedur layanan.
-Jangan mengaku sebagai pembuat kebijakan final.
+Hormati user_role, klasifikasi data audit, dan prosedur permintaan informasi audit.
+Jangan mengaku sebagai evidence final atau pengganti kertas kerja audit resmi.
 
 Catatan implementasi: aplikasi mengandalkan instruksi prompt untuk membatasi jawaban,
 sementara enforcement pada application layer masih minimal.
@@ -62,12 +63,12 @@ sementara enforcement pada application layer masih minimal.
 
 with tab_chat:
     st.subheader("Percakapan")
-    st.info("Chatbot memberi jawaban awal atas pertanyaan layanan internal. Jawaban untuk keputusan penting tetap perlu review manusia.")
+    st.info("Chatbot memberi ringkasan awal atas informasi audit masa lalu. Jawaban bukan evidence final dan tetap perlu verifikasi ke sumber resmi.")
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    user_query = st.chat_input("Tanyakan prosedur SPBE, klasifikasi data, atau layanan TIK...")
+    user_query = st.chat_input("Tanyakan temuan audit masa lalu, pola risiko, status tindak lanjut, atau prosedur akses informasi...")
     if user_query:
         st.session_state.messages.append({"role": "user", "content": user_query})
         with st.chat_message("user"):
@@ -102,7 +103,7 @@ with tab_chat:
 
 with tab_kb:
     st.subheader("Knowledge Base")
-    st.write("Dokumen dummy yang dipakai retrieval lokal.")
+    st.write("Ringkasan dokumen dummy yang dipakai retrieval lokal.")
     st.dataframe(kb_df, use_container_width=True, hide_index=True)
 
 with tab_audit:
@@ -111,5 +112,3 @@ with tab_audit:
     logs_df = logs_to_dataframe(st.session_state.audit_logs)
     st.dataframe(logs_df, use_container_width=True, hide_index=True)
     st.download_button("Export log CSV", data=logs_df.to_csv(index=False).encode("utf-8"), file_name="chatbot_audit_log.csv", mime="text/csv")
-    with st.expander("Preview catatan internal"):
-        st.dataframe(confidential_df, use_container_width=True, hide_index=True)

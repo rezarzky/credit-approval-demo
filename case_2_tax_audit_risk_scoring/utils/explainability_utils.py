@@ -33,3 +33,22 @@ def local_perturbation_explanation(model_pipeline, row: pd.DataFrame, reference_
         new_score = float(score_dataframe(model_pipeline, perturbed).iloc[0])
         rows.append({"feature": feature, "current_value": row.iloc[0][feature], "reference_value": replacement, "score_change_if_replaced": round(new_score - base_score, 2)})
     return pd.DataFrame(rows).sort_values("score_change_if_replaced", key=lambda s: s.abs(), ascending=False)
+
+
+def shap_like_contributions(model_pipeline, row: pd.DataFrame, reference_df: pd.DataFrame) -> pd.DataFrame:
+    """Approximate local SHAP values using reference-value perturbation."""
+    base_score = float(score_dataframe(model_pipeline, row).iloc[0])
+    rows = []
+    for feature in FEATURE_COLUMNS:
+        perturbed = row.copy()
+        replacement = reference_df[feature].mode(dropna=True).iloc[0] if reference_df[feature].dtype == "object" else reference_df[feature].median()
+        perturbed.loc[perturbed.index[0], feature] = replacement
+        reference_score = float(score_dataframe(model_pipeline, perturbed).iloc[0])
+        rows.append(
+            {
+                "feature": feature,
+                "value": row.iloc[0][feature],
+                "shap_value": round(base_score - reference_score, 2),
+            }
+        )
+    return pd.DataFrame(rows).sort_values("shap_value", key=lambda s: s.abs(), ascending=False)

@@ -41,12 +41,10 @@ Jika model belum ada, aplikasi akan mencoba membuat dataset dan melatih model ot
 ## Menu Aplikasi
 
 - `Overview`: ringkasan dataset, score, dan metrik awal.
-- `Single Prediction`: input satu wajib pajak sintetis dan risk score.
-- `Batch Prediction`: upload CSV dan scoring banyak record.
-- `Model Performance`: ROC-AUC, precision, recall, F1-score, confusion matrix, reliability check.
-- `Threshold Analysis`: dampak threshold.
-- `Audit/Fairness`: perbandingan score dan error rate antar kelompok atribut.
-- `Explainability`: feature importance dan local explanation.
+- `Prediksi`: input satu wajib pajak sintetis dan risk score.
+- `Performance & Threshold`: ROC-AUC, precision, recall, F1-score, confusion matrix, reliability check, dan dampak threshold.
+- `Fairness`: perbandingan score dan error rate antar kelompok atribut.
+- `SHAP Explainability`: feature importance dan visualisasi SHAP-style untuk local explanation.
 - `Data Audit`: missing values, distribusi label, kategori, dan statistik numerik.
 
 ## Tugas Peserta
@@ -72,7 +70,7 @@ Jika model belum ada, aplikasi akan mencoba membuat dataset dan melatih model ot
 
 ## Evidence dan Format Laporan
 
-Kumpulkan screenshot Overview, Data Audit, Model Performance pada minimal dua threshold, fairness untuk minimal dua atribut, Explainability, catatan review kode, dan tabel test scenario. Laporan berisi ringkasan eksekutif, ruang lingkup, metodologi, test scenario, temuan, prioritas perbaikan, dan lampiran evidence.
+Kumpulkan screenshot Overview, Data Audit, Performance & Threshold pada minimal dua threshold, fairness untuk minimal dua atribut, SHAP Explainability, catatan review kode, dan tabel test scenario. Laporan berisi ringkasan eksekutif, ruang lingkup, metodologi, test scenario, temuan, prioritas perbaikan, dan lampiran evidence.
 
 ## Batasan
 

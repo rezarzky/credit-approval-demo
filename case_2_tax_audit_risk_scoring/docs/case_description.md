@@ -23,7 +23,7 @@ Dataset `data/taxpayer_risk_dummy.csv` memuat sektor, omzet, pertumbuhan omzet, 
 
 ## Model dan Risk Scoring
 
-`train_model.py` membuat model simulasi lokal berbasis `numpy/pandas` dengan metode `predict_proba`. Model mempelajari baseline rate dan risk rate per kategori dari data training, lalu menggabungkannya dengan sinyal numerik untuk menghasilkan risk score 0-100%. Pendekatan ini sengaja ringan agar mudah dijalankan di kelas tanpa API eksternal atau dependensi ML berat.
+`train_model.py` membuat model simulasi lokal berbasis `numpy/pandas` dengan metode `predict_proba`. Model mempelajari baseline rate dan risk rate per kategori dari data training, lalu menggabungkannya dengan sinyal numerik untuk menghasilkan risk score 0-100%. Aplikasi disederhanakan menjadi menu inti dan menyediakan visualisasi SHAP-style untuk menjelaskan kontribusi lokal setiap fitur terhadap score.
 
 ## Kelemahan yang Sengaja Ditanamkan
 
@@ -49,7 +49,7 @@ Menilai kualitas data, balancing, lifecycle, performance, calibration, threshold
 - Uji ROC-AUC, precision, recall, F1-score, dan confusion matrix pada threshold 35%, 50%, 65%.
 - Review calibration table.
 - Uji fairness pada `sector`, `business_size`, `kpp_region`, dan `demographic_group`.
-- Review feature importance dan local perturbation explanation.
+- Review feature importance dan visualisasi SHAP-style local contribution.
 - Cari model card, drift monitoring, approval, human review, dan audit trail.
 
 ## Test Cases

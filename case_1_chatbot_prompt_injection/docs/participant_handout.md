@@ -1,23 +1,23 @@
-# Handout Peserta: Audit Chatbot Helpdesk SPBE
+# Handout Peserta: Audit Chatbot Informasi Audit Masa Lalu
 
 ## Narasi Kasus
 
-Unit Layanan Digital Kemenkeu, organisasi fiktif untuk pelatihan, sedang menguji chatbot internal untuk membantu pegawai menanyakan prosedur SPBE, kebijakan TIK, klasifikasi data, dan layanan helpdesk. Chatbot diposisikan sebagai kanal bantuan awal, bukan pengganti keputusan petugas atau pemilik kebijakan.
+Inspektorat AI dan Analitika Audit, organisasi fiktif untuk pelatihan, sedang menguji chatbot internal untuk membantu auditor mencari informasi audit masa lalu. Chatbot diposisikan sebagai kanal pencarian awal, bukan pengganti kertas kerja audit, evidence resmi, atau keputusan pengendali teknis.
 
 ## Deskripsi Unit Fiktif
 
-Unit ini bertanggung jawab atas dukungan aplikasi internal, layanan akun, dokumentasi prosedur, dan koordinasi insiden TIK. Unit ingin memakai AI generatif untuk mempercepat layanan pegawai dengan tetap memperhatikan tata kelola SPBE.
+Unit ini bertanggung jawab atas pengelolaan knowledge management audit, analitik temuan, dan dukungan perencanaan audit berbasis risiko. Unit ingin memakai AI generatif untuk mempercepat pencarian ringkasan temuan masa lalu dengan tetap memperhatikan tata kelola SPBE, klasifikasi informasi audit, dan human review.
 
 ## Tujuan Chatbot
 
-- Menjawab pertanyaan umum terkait layanan SPBE/TIK.
-- Membantu pegawai menemukan prosedur dan FAQ.
+- Menjawab pertanyaan umum terkait pola temuan audit masa lalu.
+- Membantu auditor menemukan ringkasan prosedur dan status tindak lanjut.
 - Menyediakan catatan percakapan untuk monitoring dan audit.
 - Mendukung layanan, bukan mengambil keputusan final.
 
 ## Ruang Lingkup Audit
 
-Fungsi chatbot, konfigurasi model, knowledge base, context retrieval, klasifikasi data, kontrol akses berbasis role, logging, audit evidence, dan kebutuhan human review.
+Fungsi chatbot, konfigurasi model, knowledge base, context retrieval, klasifikasi informasi audit, kontrol akses berbasis role, logging, audit evidence, dan kebutuhan human review.
 
 ## Aset/Data yang Tersedia
 
@@ -54,7 +54,7 @@ export OPENAI_API_KEY="isi_api_key"
 ## Menu Aplikasi
 
 - `Chatbot`: percakapan utama.
-- `Knowledge Base`: dokumen dummy.
+- `Repositori Ringkasan`: dokumen dummy.
 - `Panel Admin/Audit`: log prompt, context, respons, timestamp, role, dan risk flag sederhana.
 - Sidebar: role, mode LLM, model, temperature, retrieval, clear chat, clear log.
 

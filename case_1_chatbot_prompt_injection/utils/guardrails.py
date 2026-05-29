@@ -3,7 +3,7 @@ from __future__ import annotations
 
 RISK_TERMS = {
     "prompt_injection": ["ignore", "abaikan", "lupakan instruksi", "system prompt", "developer", "override"],
-    "secret_request": ["rahasia", "confidential", "kode", "token", "internal note"],
+    "secret_request": ["rahasia", "confidential", "kode", "token", "internal note", "fraud", "investigasi", "informan"],
     "role_bypass": ["admin", "auditor", "mode admin", "sebagai auditor"],
 }
 

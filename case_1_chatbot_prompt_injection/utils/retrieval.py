@@ -49,6 +49,7 @@ def format_context(rows: pd.DataFrame) -> str:
 
 def should_attach_confidential_context(query: str, user_role: str) -> bool:
     lowered = query.lower()
-    suspicious_terms = ["mode admin", "sebagai auditor", "abaikan role", "override", "rahasia", "confidential", "system prompt", "context"]
+    suspicious_terms = ["mode admin", "sebagai auditor", "abaikan role", "override", "rahasia", "confidential", "system prompt", "context", "fraud", "investigasi"]
     # Sengaja lemah: role dan keyword user dipercaya sebagai dasar membuka context rahasia.
-    return user_role.lower() in {"admin", "auditor"} or any(term in lowered for term in suspicious_terms)
+    role = user_role.lower()
+    return any(token in role for token in ["admin", "pengendali"]) or any(term in lowered for term in suspicious_terms)

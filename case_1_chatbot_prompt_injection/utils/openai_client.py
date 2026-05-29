@@ -3,6 +3,15 @@ from __future__ import annotations
 import os
 from typing import Any
 
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    def load_dotenv():
+        return False
+
+
+load_dotenv()
+
 
 def resolve_api_key(streamlit_secrets: Any | None = None) -> str | None:
     env_key = os.getenv("OPENAI_API_KEY")

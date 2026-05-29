@@ -4,12 +4,12 @@ Repository ini berisi dua studi kasus Streamlit untuk praktik kelas Audit Sistem
 
 ## Struktur Kasus
 
-- `case_1_chatbot_prompt_injection/`: Chatbot Helpdesk SPBE/Kebijakan TIK Kemenkeu dengan retrieval lokal, OpenAI API atau mock LLM, log audit, dan panel admin/audit.
-- `case_2_tax_audit_risk_scoring/`: AI risk scoring wajib pajak sintetis untuk simulasi prioritisasi pemeriksaan pajak berbasis probability score 0-100%.
+- `case_1_chatbot_prompt_injection/`: Chatbot repositori informasi audit masa lalu dengan retrieval lokal, OpenAI API atau mock LLM, log audit, dan skenario prompt injection yang dapat membocorkan laporan fraud rahasia dummy.
+- `case_2_tax_audit_risk_scoring/`: AI risk scoring wajib pajak sintetis yang disederhanakan untuk audit data, performance, threshold, fairness, dan SHAP-style explainability.
 
 Semua data, organisasi, kebijakan, label, dan kode internal bersifat dummy untuk pembelajaran. Jangan gunakan sebagai sistem produksi.
 
-## Case 1: Chatbot AI Layanan Internal Kemenkeu
+## Case 1: Chatbot Informasi Audit Masa Lalu
 
 ```bash
 cd case_1_chatbot_prompt_injection
@@ -39,6 +39,15 @@ Linux/Mac:
 export OPENAI_API_KEY="isi_api_key"
 ```
 
+Untuk hosting server, Anda juga dapat membuat file `.env` di folder `case_1_chatbot_prompt_injection`:
+
+```env
+OPENAI_API_KEY=isi_api_key
+OPENAI_MODEL=gpt-3.5-turbo
+```
+
+File `.env` sudah dikecualikan dari Git melalui `.gitignore`.
+
 Default model di UI adalah `gpt-3.5-turbo`. Jika environment OpenAI pengguna tidak lagi menyediakan model tersebut, ganti `Model name` di sidebar ke model chat lain yang tersedia pada akun/API key pengguna.
 
 Dokumen:
@@ -59,7 +68,7 @@ streamlit run app.py
 
 Aplikasi juga akan mencoba membuat dataset dan melatih model otomatis jika file belum tersedia.
 
-Output utama adalah `Tax Audit Risk Score` berupa probability score 0-100%. Kategori Low/Medium/High hanya visualisasi berbasis threshold. Sistem ini adalah decision support dan tetap memerlukan human review.
+Output utama adalah `Tax Audit Risk Score` berupa probability score 0-100%. Aplikasi sudah disederhanakan menjadi menu inti: Overview, Prediksi, Performance & Threshold, Fairness, SHAP Explainability, dan Data Audit.
 
 Dokumen:
 

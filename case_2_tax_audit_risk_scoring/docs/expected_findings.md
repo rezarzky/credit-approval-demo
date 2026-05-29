@@ -15,3 +15,5 @@ Dokumen ini hanya untuk fasilitator.
 | 9 | Tidak ada monitoring drift | Medium | Tidak ada modul drift | Operasional AI belum lengkap | Model menurun tanpa terdeteksi | Monitoring drift dan retraining trigger |
 | 10 | Human review belum terdokumentasi | High | Aplikasi hanya menampilkan score | Workflow keputusan belum didefinisikan | Overreliance pada score | SOP human-in-the-loop |
 | 11 | Audit trail perubahan data/model tidak memadai | Medium | Model pkl tanpa lineage lengkap | MLOps governance belum lengkap | Sulit rekonstruksi versi | Versioning dan change management |
+
+Catatan fasilitator: halaman `SHAP Explainability` memakai pendekatan SHAP-style berbasis perturbasi nilai referensi agar ringan untuk kelas. Nilai positif menaikkan risk score lokal, nilai negatif menurunkan risk score lokal.

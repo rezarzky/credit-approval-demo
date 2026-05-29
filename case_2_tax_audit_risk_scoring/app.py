@@ -9,7 +9,7 @@ from train_model import train
 from train_model import binary_metrics, roc_auc_score_simple
 from utils.calibration_utils import calibration_table
 from utils.data_generator import write_dataset
-from utils.explainability_utils import global_feature_importance, local_perturbation_explanation
+from utils.explainability_utils import global_feature_importance, local_perturbation_explanation, shap_like_contributions
 from utils.fairness_utils import group_score_summary
 from utils.model_utils import FEATURE_COLUMNS, load_artifact, risk_band, score_dataframe
 
@@ -56,7 +56,7 @@ with st.sidebar:
     st.header("Pengaturan")
     threshold = st.slider("Threshold visual High Risk (%)", 10, 90, 50, 5)
     low_threshold = st.slider("Threshold visual Medium (%)", 5, threshold - 5, 35, 5)
-    page = st.radio("Menu", ["Overview", "Single Prediction", "Batch Prediction", "Model Performance", "Threshold Analysis", "Audit/Fairness", "Explainability", "Data Audit"])
+    page = st.radio("Menu", ["Overview", "Prediksi", "Performance & Threshold", "Fairness", "SHAP Explainability", "Data Audit"])
     if st.button("Regenerate data dan retrain model"):
         write_dataset(DATA_PATH)
         train()
@@ -74,7 +74,7 @@ if page == "Overview":
     st.write("Dataset sepenuhnya sintetis. Aplikasi menyediakan prediction, performance, threshold, fairness, explainability, dan data audit.")
     st.dataframe(df_scored.head(25), use_container_width=True, hide_index=True)
 
-elif page == "Single Prediction":
+elif page == "Prediksi":
     st.subheader("Prediksi Single Input")
     sample = df_scored.iloc[0].to_dict()
     col1, col2, col3 = st.columns(3)
@@ -104,27 +104,8 @@ elif page == "Single Prediction":
     st.write(f"Kategori visual: **{risk_band(score, low_threshold, threshold)}**")
     st.dataframe(input_df, use_container_width=True, hide_index=True)
 
-elif page == "Batch Prediction":
-    st.subheader("Batch Prediction dari CSV")
-    uploaded_file = st.file_uploader("Upload CSV dengan kolom fitur yang sama", type=["csv"])
-    if uploaded_file is None:
-        st.write("Contoh struktur batch menggunakan 10 baris pertama dataset dummy.")
-        st.dataframe(df[FEATURE_COLUMNS].head(10), use_container_width=True, hide_index=True)
-        st.download_button("Download template CSV", data=df[FEATURE_COLUMNS].head(20).to_csv(index=False).encode("utf-8"), file_name="template_batch_tax_risk.csv", mime="text/csv")
-    else:
-        batch_df = pd.read_csv(uploaded_file)
-        missing_cols = [col for col in FEATURE_COLUMNS if col not in batch_df.columns]
-        if missing_cols:
-            st.error(f"Kolom belum lengkap: {missing_cols}")
-        else:
-            scored = batch_df.copy()
-            scored["risk_score"] = score_dataframe(pipeline, scored)
-            scored["visual_category"] = scored["risk_score"].apply(lambda s: risk_band(s, low_threshold, threshold))
-            st.dataframe(scored, use_container_width=True, hide_index=True)
-            st.download_button("Export hasil batch", data=scored.to_csv(index=False).encode("utf-8"), file_name="batch_tax_risk_scored.csv", mime="text/csv")
-
-elif page == "Model Performance":
-    st.subheader("Dashboard Performa Model")
+elif page == "Performance & Threshold":
+    st.subheader("Performance & Threshold")
     y_true = df_scored["audit_risk_label"].astype(int)
     y_prob = df_scored["risk_score"] / 100
     y_pred = (df_scored["risk_score"] >= threshold).astype(int)
@@ -138,9 +119,7 @@ elif page == "Model Performance":
     st.write("Reliability check sederhana.")
     st.dataframe(calibration_table(y_true, y_prob), use_container_width=True, hide_index=True)
 
-elif page == "Threshold Analysis":
-    st.subheader("Threshold Analysis")
-    y_true = df_scored["audit_risk_label"].astype(int)
+    st.write("Analisis threshold ringkas.")
     rows = []
     for t in range(20, 86, 5):
         y_pred = (df_scored["risk_score"] >= t).astype(int)
@@ -150,22 +129,29 @@ elif page == "Threshold Analysis":
     st.dataframe(threshold_df, use_container_width=True, hide_index=True)
     st.line_chart(threshold_df.set_index("threshold_percent")[["precision", "recall", "f1_score"]])
 
-elif page == "Audit/Fairness":
-    st.subheader("Audit/Fairness")
+elif page == "Fairness":
+    st.subheader("Fairness Audit")
     group_col = st.selectbox("Analisis berdasarkan atribut", ["sector", "business_size", "kpp_region", "demographic_group", "taxpayer_type", "pkp_status"])
     summary = group_score_summary(df_scored, group_col, "risk_score", threshold, label_col="audit_risk_label")
     st.dataframe(summary, use_container_width=True, hide_index=True)
     st.bar_chart(summary.set_index("group")[["average_score", "high_risk_rate_by_threshold"]])
 
-elif page == "Explainability":
-    st.subheader("Explainability")
+elif page == "SHAP Explainability":
+    st.subheader("SHAP Explainability")
     importance = global_feature_importance(pipeline)
+    st.write("Global feature importance sederhana.")
     st.dataframe(importance, use_container_width=True, hide_index=True)
     st.bar_chart(importance.set_index("feature")["importance"])
     taxpayer_id = st.selectbox("Pilih taxpayer_id", df_scored["taxpayer_id"].head(250))
     selected_row = df_scored.loc[df_scored["taxpayer_id"] == taxpayer_id, FEATURE_COLUMNS]
-    st.metric("Risk score record terpilih", f"{float(score_dataframe(pipeline, selected_row).iloc[0]):.1f}%")
-    st.dataframe(local_perturbation_explanation(pipeline, selected_row, df_scored[FEATURE_COLUMNS]), use_container_width=True, hide_index=True)
+    selected_score = float(score_dataframe(pipeline, selected_row).iloc[0])
+    st.metric("Risk score record terpilih", f"{selected_score:.1f}%")
+    shap_df = shap_like_contributions(pipeline, selected_row, df_scored[FEATURE_COLUMNS]).head(12)
+    st.write("Visualisasi SHAP-style: nilai positif menaikkan risk score, nilai negatif menurunkan risk score.")
+    st.bar_chart(shap_df.set_index("feature")["shap_value"])
+    st.dataframe(shap_df, use_container_width=True, hide_index=True)
+    with st.expander("Detail local perturbation"):
+        st.dataframe(local_perturbation_explanation(pipeline, selected_row, df_scored[FEATURE_COLUMNS]), use_container_width=True, hide_index=True)
 
 elif page == "Data Audit":
     st.subheader("Data Audit")
