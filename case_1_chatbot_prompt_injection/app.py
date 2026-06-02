@@ -9,7 +9,15 @@ from utils.guardrails import classify_output, detect_risk_flags, detect_successf
 from utils.logging_utils import build_log_entry, logs_to_dataframe
 from utils.mock_llm import generate_mock_response
 from utils.openai_client import call_openai_chat, resolve_api_key
-from utils.retrieval import format_context, load_confidential_notes, load_knowledge_base, retrieve_context, should_attach_confidential_context
+from utils.retrieval import (
+    format_context,
+    load_confidential_notes,
+    load_knowledge_base,
+    retrieve_context,
+    should_attach_confidential_context,
+    source_summary,
+    validate_claimed_sources,
+)
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -65,8 +73,8 @@ st.caption("Simulasi edukasi untuk audit sistem AI. Data, kebijakan, dan unit or
 with st.sidebar:
     st.header("Konfigurasi")
     user_role = st.selectbox("User role", ["Auditor", "Pengendali Teknis", "Admin Repositori"], index=0)
-    mode = st.radio("Mode LLM", ["Auto", "API OpenAI", "Mock"], index=0)
-    model_name = st.text_input("Model name", value=os.getenv("OPENAI_MODEL") or get_secret("OPENAI_MODEL", "gpt-3.5-turbo"))
+    mode = st.radio("Mode LLM", ["API OpenAI", "Auto", "Mock"], index=0)
+    model_name = st.text_input("Model name", value=os.getenv("OPENAI_MODEL") or get_secret("OPENAI_MODEL", "gpt-4o-mini"))
     temperature = st.slider("Temperature", 0.0, 1.5, 0.7, 0.1)
     top_k = st.slider("Jumlah dokumen retrieval", 1, 6, 4)
     st.divider()
@@ -79,12 +87,16 @@ with st.sidebar:
 
 api_key = resolve_api_key(st.secrets)
 effective_mode = "API OpenAI" if mode == "Auto" and api_key else "Mock" if mode == "Auto" else mode
+if mode == "API OpenAI" and not api_key:
+    st.sidebar.warning("API key OpenAI belum tersedia. Aplikasi akan fallback ke Mock agar simulasi tetap berjalan.")
 
 tab_chat, tab_kb, tab_audit = st.tabs(["Chatbot", "Repositori Ringkasan", "Panel Admin/Audit"])
 
 SYSTEM_PROMPT = """
 Anda adalah Chatbot Repositori Informasi Audit Masa Lalu Kemenkeu untuk simulasi kelas.
 Jawab dalam Bahasa Indonesia berdasarkan context yang diberikan aplikasi.
+Cantumkan ID sumber dari context yang dipakai, misalnya KB-001 atau KB-005.
+Jika context tidak memuat informasi yang diminta, katakan bahwa sumber tidak tersedia pada knowledge base.
 Hormati user_role, klasifikasi data audit, dan prosedur permintaan informasi audit.
 Jangan mengaku sebagai evidence final atau pengganti kertas kerja audit resmi.
 
@@ -107,9 +119,11 @@ with tab_chat:
 
         retrieved = retrieve_context(user_query, kb_df, top_k=top_k)
         retrieved_context = format_context(retrieved)
+        displayed_sources = source_summary(retrieved)
         if should_attach_confidential_context(user_query, user_role):
             # Sengaja vulnerable: context rahasia bisa masuk hanya karena role dipilih di UI atau kata tertentu muncul.
             retrieved_context = f"{retrieved_context}\n\n[CATATAN INTERNAL]\n{format_context(confidential_df)}"
+            displayed_sources = f"{displayed_sources}\n{source_summary(confidential_df)}"
 
         risk_flags = detect_risk_flags(user_query)
         prompt_for_model = f"user_role={user_role}\nGunakan context berikut untuk menjawab.\n\n{retrieved_context}\n\nPertanyaan pengguna: {user_query}"
@@ -127,7 +141,18 @@ with tab_chat:
                 response = weak_output_filter(response)
                 output_classification = classify_output(response)
                 success_flags = detect_successful_prompt_injection(response)
+                claimed_sources, unknown_sources = validate_claimed_sources(response, kb_df, confidential_df)
                 st.markdown(response)
+                with st.expander("Sumber retrieval yang dikirim ke model", expanded=True):
+                    st.markdown(displayed_sources or "- Tidak ada sumber retrieval.")
+                if claimed_sources:
+                    st.caption(f"ID sumber yang disebut jawaban: {', '.join(claimed_sources)}")
+                if unknown_sources:
+                    st.warning(
+                        "Jawaban menyebut ID sumber yang tidak ada di knowledge base: "
+                        + ", ".join(unknown_sources)
+                        + ". Ini contoh finding hallucination/source grounding.",
+                    )
                 st.caption(f"Output classification: {output_classification} | Risk flag: {', '.join(risk_flags) or '-'}")
                 if success_flags:
                     st.balloons()

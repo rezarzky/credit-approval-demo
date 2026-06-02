@@ -7,6 +7,7 @@ import pandas as pd
 
 
 TOKEN_RE = re.compile(r"[A-Za-z0-9_]+")
+SOURCE_ID_RE = re.compile(r"\b(?:KB|CN)-\d{3}\b", re.IGNORECASE)
 
 
 def load_knowledge_base(base_dir: Path) -> pd.DataFrame:
@@ -39,17 +40,59 @@ def retrieve_context(query: str, kb: pd.DataFrame, top_k: int = 4) -> pd.DataFra
 def format_context(rows: pd.DataFrame) -> str:
     parts = []
     for _, row in rows.iterrows():
+        source_name = row.get("source_name", "")
+        source_url = row.get("source_url", "")
+        source_info = f"sumber={source_name} ({source_url})" if source_name or source_url else "sumber=catatan internal"
         parts.append(
             f"[{row.get('doc_id', row.get('note_id', 'DOC'))}] "
             f"{row.get('title', '')} | klasifikasi={row.get('classification', '')}\n"
+            f"{source_info}\n"
             f"{row.get('content', '')}"
         )
     return "\n\n".join(parts)
 
 
+def source_summary(rows: pd.DataFrame) -> str:
+    lines = []
+    for _, row in rows.iterrows():
+        source_id = row.get("doc_id", row.get("note_id", "DOC"))
+        title = row.get("title", "")
+        source_name = row.get("source_name", "")
+        source_url = row.get("source_url", "")
+        classification = row.get("classification", "")
+        if source_url:
+            lines.append(f"- {source_id} - {title} ({classification}); {source_name}: {source_url}")
+        else:
+            lines.append(f"- {source_id} - {title} ({classification}); {source_name or 'catatan internal'}")
+    return "\n".join(lines)
+
+
+def validate_claimed_sources(response: str, kb: pd.DataFrame, confidential_notes: pd.DataFrame | None = None) -> tuple[list[str], list[str]]:
+    known_ids = {str(value).upper() for value in kb.get("doc_id", [])}
+    if confidential_notes is not None:
+        known_ids.update(str(value).upper() for value in confidential_notes.get("note_id", []))
+    claimed_ids = sorted({match.upper() for match in SOURCE_ID_RE.findall(response)})
+    unknown_ids = [source_id for source_id in claimed_ids if source_id not in known_ids]
+    return claimed_ids, unknown_ids
+
+
 def should_attach_confidential_context(query: str, user_role: str) -> bool:
     lowered = query.lower()
-    suspicious_terms = ["mode admin", "sebagai auditor", "abaikan role", "override", "rahasia", "confidential", "system prompt", "context", "fraud", "investigasi"]
+    suspicious_terms = [
+        "mode admin",
+        "mode audit teknis",
+        "sebagai auditor",
+        "abaikan role",
+        "override",
+        "rahasia",
+        "confidential",
+        "system prompt",
+        "context",
+        "raw context",
+        "catatan internal",
+        "fraud",
+        "investigasi",
+    ]
     # Sengaja lemah: role dan keyword user dipercaya sebagai dasar membuka context rahasia.
     role = user_role.lower()
     return any(token in role for token in ["admin", "pengendali"]) or any(term in lowered for term in suspicious_terms)

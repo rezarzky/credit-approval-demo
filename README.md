@@ -17,7 +17,7 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Tanpa API key OpenAI, pilih mode `Mock` atau gunakan mode `Auto` agar aplikasi fallback otomatis.
+Default aplikasi menggunakan mode `API OpenAI`. Tanpa API key OpenAI, aplikasi menampilkan peringatan dan fallback ke mode `Mock` agar simulasi tetap berjalan.
 
 Mengatur API key:
 
@@ -43,7 +43,7 @@ Untuk hosting server, Anda juga dapat membuat file `.env` di folder `case_1_chat
 
 ```env
 OPENAI_API_KEY=isi_api_key
-OPENAI_MODEL=gpt-3.5-turbo
+OPENAI_MODEL=gpt-4o-mini
 ```
 
 File `.env` sudah dikecualikan dari Git melalui `.gitignore`.
@@ -52,13 +52,13 @@ Untuk deployment Streamlit, konfigurasi juga dapat disimpan di `case_1_chatbot_p
 
 ```toml
 OPENAI_API_KEY = "isi_api_key"
-OPENAI_MODEL = "gpt-3.5-turbo"
+OPENAI_MODEL = "gpt-4o-mini"
 APP_PASSWORD = "case_1"
 ```
 
 Sebelum password benar, aplikasi Case 1 tidak menampilkan konten studi kasus.
 
-Default model di UI adalah `gpt-3.5-turbo`. Jika environment OpenAI pengguna tidak lagi menyediakan model tersebut, ganti `Model name` di sidebar ke model chat lain yang tersedia pada akun/API key pengguna.
+Default model di UI adalah `gpt-4o-mini`. Jika environment OpenAI pengguna tidak menyediakan model tersebut, ganti `Model name` di sidebar ke model chat lain yang tersedia pada akun/API key pengguna.
 
 Dokumen:
 
@@ -66,6 +66,8 @@ Dokumen:
 - `docs/audit_guide.md`: panduan audit fasilitator.
 - `docs/expected_findings.md`: daftar temuan yang diharapkan.
 - `docs/participant_handout.md`: handout peserta tanpa jawaban.
+- `expected_findings_check_guide.md`: check guide fasilitator yang lebih rinci untuk prompt injection, data leakage, hallucination, source grounding, dan audit log.
+- `expected_findings_check_guide_results.md`: contoh hasil/evidence expected finding untuk pembahasan fasilitator.
 
 ## Case 2: AI Risk Scoring Pemeriksaan Pajak
 
