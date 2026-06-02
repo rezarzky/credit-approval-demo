@@ -66,8 +66,8 @@ Dokumen:
 - `docs/audit_guide.md`: panduan audit fasilitator.
 - `docs/expected_findings.md`: daftar temuan yang diharapkan.
 - `docs/participant_handout.md`: handout peserta tanpa jawaban.
-- `expected_findings_check_guide.md`: check guide fasilitator yang lebih rinci untuk prompt injection, data leakage, hallucination, source grounding, dan audit log.
-- `expected_findings_check_guide_results.md`: contoh hasil/evidence expected finding untuk pembahasan fasilitator.
+- `docs/expected_findings_check_guide_streamlit.md`: check guide fasilitator yang lebih rinci untuk prompt injection, data leakage, hallucination, source grounding, dan audit log.
+- `docs/expected_findings_check_guide_results.md`: contoh hasil/evidence expected finding untuk pembahasan fasilitator.
 
 ## Case 2: AI Risk Scoring Pemeriksaan Pajak
 
