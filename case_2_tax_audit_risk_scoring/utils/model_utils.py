@@ -48,7 +48,9 @@ class SimpleTaxRiskModel:
         for col in CATEGORICAL_COLUMNS:
             rates = self.category_risk.get(col, {})
             mapped = X[col].map(rates).fillna(self.base_rate).astype(float)
-            weight = 1.25 if col == "demographic_group" else 0.75
+            # Sengaja terlalu kuat untuk bahan diskusi fairness: atribut sintetis ini
+            # tidak seharusnya menjadi faktor dominan dalam risk scoring operasional.
+            weight = 2.4 if col == "demographic_group" else 0.75
             z += (mapped - self.base_rate) * weight
 
         prob = _sigmoid(z)

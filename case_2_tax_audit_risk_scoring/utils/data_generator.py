@@ -26,7 +26,7 @@ def generate_taxpayer_data(n_rows: int = 1500, seed: int = 42) -> pd.DataFrame:
 
     size_factor = pd.Series(business_size).map({"Mikro": 0.65, "Kecil": 1.0, "Menengah": 1.55, "Besar": 2.4}).to_numpy()
     sector_factor = pd.Series(sector).map({"Perdagangan": 1.15, "Jasa": 0.95, "Manufaktur": 1.45, "Konstruksi": 1.25, "Transportasi": 1.05, "Digital": 1.35}).to_numpy()
-    group_factor = pd.Series(demographic_group).map({"Group A": 1.0, "Group B": 0.96, "Group C": 0.9, "Group D": 1.04}).to_numpy()
+    group_factor = pd.Series(demographic_group).map({"Group A": 1.0, "Group B": 0.94, "Group C": 0.86, "Group D": 1.04}).to_numpy()
 
     revenue = np.clip(rng.lognormal(mean=15.5, sigma=0.9, size=n_rows) * size_factor * sector_factor, 50_000_000, 120_000_000_000)
     revenue_growth = rng.normal(0.08, 0.32, n_rows)
@@ -42,7 +42,8 @@ def generate_taxpayer_data(n_rows: int = 1500, seed: int = 42) -> pd.DataFrame:
     sector_bias = pd.Series(sector).map({"Perdagangan": 0.18, "Jasa": -0.08, "Manufaktur": 0.22, "Konstruksi": 0.16, "Transportasi": 0.04, "Digital": 0.12}).to_numpy()
     region_bias = pd.Series(kpp_region).map({"KPP Alpha": -0.04, "KPP Beta": 0.0, "KPP Gamma": 0.08, "KPP Delta": 0.22, "KPP Epsilon": -0.02}).to_numpy()
     # Bias sintetis untuk pembelajaran fairness testing. Label netral tidak merepresentasikan kelompok nyata.
-    demographic_bias = pd.Series(demographic_group).map({"Group A": 0.0, "Group B": -0.05, "Group C": 0.38, "Group D": 0.08}).to_numpy()
+    # Group C sengaja dibuat jauh lebih tinggi agar gap fairness mudah terlihat di kelas.
+    demographic_bias = pd.Series(demographic_group).map({"Group A": 0.0, "Group B": -0.22, "Group C": 1.35, "Group D": 0.14}).to_numpy()
 
     latent = (
         -2.35

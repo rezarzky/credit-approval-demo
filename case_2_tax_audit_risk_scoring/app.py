@@ -9,7 +9,7 @@ from train_model import train
 from train_model import binary_metrics, roc_auc_score_simple
 from utils.calibration_utils import calibration_table
 from utils.data_generator import write_dataset
-from utils.explainability_utils import global_feature_importance, local_perturbation_explanation, shap_like_contributions
+from utils.explainability_utils import shap_like_contributions
 from utils.fairness_utils import group_score_summary
 from utils.model_utils import FEATURE_COLUMNS, load_artifact, risk_band, score_dataframe
 
@@ -25,6 +25,33 @@ def confusion_matrix_simple(y_true, y_pred) -> pd.DataFrame:
     fn = int(((y_true == 1) & (y_pred == 0)).sum())
     tp = int(((y_true == 1) & (y_pred == 1)).sum())
     return pd.DataFrame([[tn, fp], [fn, tp]], index=["Actual Low", "Actual High"], columns=["Pred Low", "Pred High"])
+
+
+def data_dictionary() -> pd.DataFrame:
+    rows = [
+        ("taxpayer_id", "Identifier", "ID sintetis wajib pajak untuk demo.", "Tidak dipakai model"),
+        ("taxpayer_type", "Kategori", "Jenis wajib pajak.", "Fitur model"),
+        ("sector", "Kategori", "Sektor usaha wajib pajak.", "Fitur model"),
+        ("annual_revenue", "Numerik", "Omzet tahunan sintetis dalam rupiah.", "Fitur model"),
+        ("revenue_growth", "Numerik", "Pertumbuhan omzet tahunan.", "Fitur model"),
+        ("tax_to_revenue_ratio", "Numerik", "Rasio pajak terhadap omzet.", "Fitur model"),
+        ("late_filing_count", "Numerik", "Jumlah keterlambatan pelaporan.", "Fitur model"),
+        ("correction_history_count", "Numerik", "Jumlah riwayat pembetulan atau koreksi.", "Fitur model"),
+        ("related_party_transactions", "Biner", "Indikator transaksi afiliasi.", "Fitur model"),
+        ("kpp_region", "Kategori", "Lokasi atau wilayah KPP sintetis.", "Fitur model"),
+        ("pkp_status", "Kategori", "Status PKP wajib pajak.", "Fitur model"),
+        ("business_size", "Kategori", "Ukuran usaha sintetis.", "Fitur model"),
+        ("cash_transaction_ratio", "Numerik", "Proporsi transaksi tunai.", "Fitur model"),
+        ("e_invoice_mismatch_rate", "Numerik", "Rasio mismatch e-Faktur sintetis.", "Fitur model"),
+        ("prior_audit_adjustment_amount", "Numerik", "Nilai koreksi pemeriksaan sebelumnya.", "Fitur model"),
+        ("demographic_group", "Kategori", "Atribut grup sintetis.", "Fitur model"),
+        ("leakage_previous_system_score", "Numerik", "Skor dari sistem sebelumnya.", "Fitur model"),
+        ("risk_probability_target", "Numerik", "Probabilitas risiko laten dari generator data.", "Kolom referensi"),
+        ("audit_risk_label", "Biner", "Label dummy risiko audit.", "Target training"),
+        ("risk_score", "Numerik", "Skor prediksi model 0-100 persen.", "Output aplikasi"),
+    ]
+    return pd.DataFrame(rows, columns=["kolom", "tipe", "deskripsi", "peran"])
+
 
 st.set_page_config(page_title="AI Risk Scoring Pemeriksaan Pajak", layout="wide", initial_sidebar_state="expanded")
 
@@ -56,7 +83,7 @@ with st.sidebar:
     st.header("Pengaturan")
     threshold = st.slider("Threshold visual High Risk (%)", 10, 90, 50, 5)
     low_threshold = st.slider("Threshold visual Medium (%)", 5, threshold - 5, 35, 5)
-    page = st.radio("Menu", ["Overview", "Prediksi", "Performance & Threshold", "Fairness", "SHAP Explainability", "Data Audit"])
+    page = st.radio("Menu", ["Overview", "Prediksi", "Performance & Threshold", "Fairness", "Data Audit", "Data Dictionary"])
     if st.button("Regenerate data dan retrain model"):
         write_dataset(DATA_PATH)
         train()
@@ -104,6 +131,39 @@ elif page == "Prediksi":
     st.write(f"Kategori visual: **{risk_band(score, low_threshold, threshold)}**")
     st.dataframe(input_df, width="stretch", hide_index=True)
 
+    st.markdown("---")
+    st.subheader("Faktor Utama Prediksi")
+    st.info("Nilai positif menaikkan risk score. Nilai negatif menurunkan risk score.")
+    shap_df = shap_like_contributions(pipeline, input_df, df_scored[FEATURE_COLUMNS]).head(8)
+    st.bar_chart(shap_df.set_index("feature")["shap_value"])
+    st.dataframe(
+        shap_df.rename(
+            columns={
+                "feature": "fitur",
+                "value": "nilai_input",
+                "shap_value": "kontribusi_ke_risk_score",
+            }
+        ),
+        width="stretch",
+        hide_index=True,
+    )
+
+    st.markdown("**Sensitivitas terhadap demographic group**")
+    group_sensitivity_rows = []
+    for group in ["Group A", "Group B", "Group C", "Group D"]:
+        variant = input_df.copy()
+        variant.loc[variant.index[0], "demographic_group"] = group
+        variant_score = float(score_dataframe(pipeline, variant).iloc[0])
+        group_sensitivity_rows.append(
+            {
+                "demographic_group": group,
+                "risk_score": round(variant_score, 1),
+                "kategori_visual": risk_band(variant_score, low_threshold, threshold),
+            }
+        )
+    sensitivity_df = pd.DataFrame(group_sensitivity_rows)
+    st.dataframe(sensitivity_df, width="stretch", hide_index=True)
+
 elif page == "Performance & Threshold":
     st.subheader("Performance & Threshold")
     y_true = df_scored["audit_risk_label"].astype(int)
@@ -133,25 +193,15 @@ elif page == "Fairness":
     st.subheader("Fairness Audit")
     group_col = st.selectbox("Analisis berdasarkan atribut", ["sector", "business_size", "kpp_region", "demographic_group", "taxpayer_type", "pkp_status"])
     summary = group_score_summary(df_scored, group_col, "risk_score", threshold, label_col="audit_risk_label")
+    highest = summary.loc[summary["high_risk_rate_by_threshold"].idxmax()]
+    lowest = summary.loc[summary["high_risk_rate_by_threshold"].idxmin()]
+    gap = highest["high_risk_rate_by_threshold"] - lowest["high_risk_rate_by_threshold"]
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Grup paling sering High Risk", highest["group"], f"{highest['high_risk_rate_by_threshold']:.1%}")
+    c2.metric("Grup paling jarang High Risk", lowest["group"], f"{lowest['high_risk_rate_by_threshold']:.1%}")
+    c3.metric("Gap selection rate", f"{gap:.1%}")
     st.dataframe(summary, width="stretch", hide_index=True)
     st.bar_chart(summary.set_index("group")[["average_score", "high_risk_rate_by_threshold"]])
-
-elif page == "SHAP Explainability":
-    st.subheader("SHAP Explainability")
-    importance = global_feature_importance(pipeline)
-    st.write("Global feature importance sederhana.")
-    st.dataframe(importance, width="stretch", hide_index=True)
-    st.bar_chart(importance.set_index("feature")["importance"])
-    taxpayer_id = st.selectbox("Pilih taxpayer_id", df_scored["taxpayer_id"].head(250))
-    selected_row = df_scored.loc[df_scored["taxpayer_id"] == taxpayer_id, FEATURE_COLUMNS]
-    selected_score = float(score_dataframe(pipeline, selected_row).iloc[0])
-    st.metric("Risk score record terpilih", f"{selected_score:.1f}%")
-    shap_df = shap_like_contributions(pipeline, selected_row, df_scored[FEATURE_COLUMNS]).head(12)
-    st.write("Visualisasi SHAP-style: nilai positif menaikkan risk score, nilai negatif menurunkan risk score.")
-    st.bar_chart(shap_df.set_index("feature")["shap_value"])
-    st.dataframe(shap_df, width="stretch", hide_index=True)
-    with st.expander("Detail local perturbation"):
-        st.dataframe(local_perturbation_explanation(pipeline, selected_row, df_scored[FEATURE_COLUMNS]), width="stretch", hide_index=True)
 
 elif page == "Data Audit":
     st.subheader("Data Audit")
@@ -168,3 +218,7 @@ elif page == "Data Audit":
         st.dataframe(df["sector"].value_counts(dropna=False).reset_index(), hide_index=True)
     st.write("Statistik numerik")
     st.dataframe(df.select_dtypes(include="number").describe().T, width="stretch")
+
+elif page == "Data Dictionary":
+    st.subheader("Data Dictionary")
+    st.dataframe(data_dictionary(), width="stretch", hide_index=True)
