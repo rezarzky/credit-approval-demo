@@ -3,7 +3,7 @@ shap
 lime
 numpy
 pandas
-scikit-learn
+scikit-learn==1.7.1
 matplotlib
 openpyxl
 langchain_openai

@@ -4,6 +4,7 @@ import pickle
 import shap
 import numpy as np
 import matplotlib.pyplot as plt
+from pandas.api.types import is_object_dtype, is_string_dtype
 
 # --- 1. Page Configuration ---
 st.set_page_config(
@@ -86,13 +87,28 @@ def prepare_lime_encoding(background_data):
     categorical_names = {}
 
     for index, column in enumerate(background_data.columns):
-        if background_data[column].dtype == "object":
-            categories = sorted(background_data[column].dropna().astype(str).unique().tolist())
+        series = background_data[column]
+        is_categorical = (
+            is_object_dtype(series.dtype)
+            or is_string_dtype(series.dtype)
+            or isinstance(series.dtype, pd.CategoricalDtype)
+        )
+
+        if is_categorical:
+            categories = sorted(series.astype("string").fillna("__MISSING__").unique().tolist())
             mapping = {category: code for code, category in enumerate(categories)}
-            encoded_df[column] = background_data[column].astype(str).map(mapping).astype(float)
+            encoded_df[column] = (
+                series.astype("string")
+                .fillna("__MISSING__")
+                .map(mapping)
+                .fillna(0)
+                .astype(float)
+            )
             category_maps[column] = categories
             categorical_features.append(index)
             categorical_names[index] = categories
+        else:
+            encoded_df[column] = pd.to_numeric(series, errors="coerce").fillna(0).astype(float)
 
     return encoded_df, category_maps, categorical_features, categorical_names
 
@@ -101,7 +117,14 @@ def encode_lime_row(row, category_maps):
     encoded_row = row.copy()
     for column, categories in category_maps.items():
         mapping = {category: code for code, category in enumerate(categories)}
-        encoded_row[column] = encoded_row[column].astype(str).map(mapping).astype(float)
+        encoded_row[column] = (
+            encoded_row[column]
+            .astype("string")
+            .fillna("__MISSING__")
+            .map(mapping)
+            .fillna(0)
+            .astype(float)
+        )
     return encoded_row
 
 
@@ -259,7 +282,7 @@ if 'explainer' in locals() and explainer is not None:
             "Kontribusi SHAP",
             "Dampak ke Persetujuan",
         ]].style.format({"Kontribusi SHAP": "{:+.4f}"}),
-        use_container_width=True,
+        width="stretch",
         hide_index=True
     )
 
@@ -299,7 +322,7 @@ if 'explainer' in locals() and explainer is not None:
         st.markdown("**Tabel Local Explanation LIME**")
         st.dataframe(
             lime_df.style.format({"Kontribusi LIME": "{:+.4f}"}),
-            use_container_width=True,
+            width="stretch",
             hide_index=True
         )
     with l2:
@@ -355,7 +378,7 @@ if 'explainer' in locals() and explainer is not None:
             "Akurasi": "{:.1%}",
             "Disparate Impact Ratio": "{:.2f}",
         }),
-        use_container_width=True,
+        width="stretch",
         hide_index=True
     )
     st.bar_chart(fairness_summary.set_index("Grup")[["Approval Rate Aktual", "Approval Rate Model"]])
@@ -387,7 +410,7 @@ if 'explainer' in locals() and explainer is not None:
             "Probabilitas Persetujuan": "{:.2%}",
             "Selisih dari Input Saat Ini": "{:+.2%}",
         }),
-        use_container_width=True,
+        width="stretch",
         hide_index=True
     )
 
