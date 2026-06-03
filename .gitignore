@@ -5,3 +5,4 @@ docs/
 **/docs/
 __pycache__/
 docs/
+.log
